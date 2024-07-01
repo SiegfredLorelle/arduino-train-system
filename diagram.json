@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "author": "Anonymous maker",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-mini", "id": "bb1", "top": -183.8, "left": -21.6, "attrs": {} },
+    { "type": "wokwi-arduino-mega", "id": "mega", "top": 125.4, "left": -99.6, "attrs": {} },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": -291.2,
+      "left": 706.4,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x27" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd2",
+      "top": -108.8,
+      "left": 706.4,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x26" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd3",
+      "top": 83.2,
+      "left": 706.4,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x25" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd4",
+      "top": 275.2,
+      "left": 706.4,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x24" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd5",
+      "top": 448,
+      "left": 706.4,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x23" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd6",
+      "top": 620.8,
+      "left": 706.4,
+      "attrs": { "pins": "i2c", "i2cAddress": "0x22" }
+    },
+    { "type": "wokwi-ir-receiver", "id": "ir1", "top": -270.15, "left": 583.82, "attrs": {} },
+    { "type": "wokwi-ir-receiver", "id": "ir2", "top": -87.75, "left": 583.82, "attrs": {} },
+    { "type": "wokwi-ir-receiver", "id": "ir3", "top": 113.85, "left": 583.82, "attrs": {} },
+    { "type": "wokwi-ir-receiver", "id": "ir4", "top": 296.25, "left": 583.82, "attrs": {} },
+    { "type": "wokwi-ir-receiver", "id": "ir5", "top": 459.45, "left": 583.82, "attrs": {} },
+    { "type": "wokwi-ir-receiver", "id": "ir6", "top": 641.85, "left": 583.82, "attrs": {} }
+  ],
+  "connections": [
+    [ "mega:SCL", "bb1:1b.j", "yellow", [ "v0" ] ],
+    [ "mega:SDA", "bb1:2b.j", "cyan", [ "v0" ] ],
+    [ "mega:GND.1", "bb1:4b.j", "black", [ "v0" ] ],
+    [ "bb1:1t.e", "bb1:1b.f", "yellow", [ "v0" ] ],
+    [ "bb1:2b.f", "bb1:2t.e", "cyan", [ "v0" ] ],
+    [ "bb1:4b.f", "bb1:4t.e", "black", [ "v0" ] ],
+    [ "lcd1:GND", "bb1:4t.a", "black", [ "h-9.6", "v-38.4", "h-556.8" ] ],
+    [ "lcd2:GND", "bb1:4t.a", "black", [ "h-9.6", "v-220.8", "h-566.4" ] ],
+    [ "lcd3:GND", "bb1:4t.a", "black", [ "h-9.6", "v-412.8", "h-566.4" ] ],
+    [ "mega:5V", "bb1:3b.j", "red", [ "v9.1", "h-56.3" ] ],
+    [ "bb1:3b.f", "bb1:3t.e", "red", [ "v0" ] ],
+    [ "lcd4:GND", "bb1:4t.a", "black", [ "h-9.6", "v-604.8", "h-566.4" ] ],
+    [ "lcd5:GND", "bb1:4t.a", "black", [ "h-9.6", "v-777.6", "h-566.4" ] ],
+    [ "lcd6:GND", "bb1:4t.a", "black", [ "h-9.6", "v-950.4", "h-566.4" ] ],
+    [ "lcd1:VCC", "bb1:3t.a", "red", [ "h-19.2", "v-67.1", "h-566.4" ] ],
+    [ "lcd3:VCC", "bb1:3t.a", "red", [ "h-19.2", "v-441.5", "h-566.4" ] ],
+    [ "lcd5:VCC", "bb1:3t.a", "red", [ "h-19.2", "v-806.3", "h-566.4" ] ],
+    [ "lcd6:VCC", "bb1:3t.a", "red", [ "h-19.2", "v-979.1", "h-566.4" ] ],
+    [ "lcd1:SDA", "bb1:2t.a", "cyan", [ "h-28.8", "v-95.8", "h-566.4" ] ],
+    [ "lcd2:SDA", "bb1:2t.a", "cyan", [ "h-28.8", "v-278.2", "h-566.4" ] ],
+    [ "lcd3:SDA", "bb1:2t.a", "cyan", [ "h-28.8", "v-470.2", "h-566.4" ] ],
+    [ "lcd4:SDA", "bb1:2t.a", "cyan", [ "h-28.8", "v-662.2", "h-566.4" ] ],
+    [ "lcd6:SDA", "bb1:2t.a", "cyan", [ "h-28.8", "v-1007.8", "h-566.4" ] ],
+    [ "lcd5:SDA", "bb1:2t.a", "cyan", [ "h-28.8", "v-835", "h-566.4" ] ],
+    [ "lcd1:SCL", "bb1:1t.a", "yellow", [ "h-38.4", "v-114.9", "h-576" ] ],
+    [ "lcd2:SCL", "bb1:1t.a", "yellow", [ "h-38.4", "v-297.3", "h-566.4" ] ],
+    [ "lcd3:SCL", "bb1:1t.a", "yellow", [ "h-38.4", "v-489.3", "h-681.6" ] ],
+    [ "lcd4:SCL", "bb1:1t.a", "yellow", [ "h-38.4", "v-681.3", "h-681.6" ] ],
+    [ "lcd5:SCL", "bb1:1t.a", "yellow", [ "h-38.4", "v-854.1", "h-681.6" ] ],
+    [ "lcd6:SCL", "bb1:1t.a", "yellow", [ "h-38.4", "v-1026.9", "h-681.6" ] ]
+  ],
+  "dependencies": {}
+}
