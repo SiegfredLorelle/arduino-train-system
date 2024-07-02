@@ -23,7 +23,6 @@ int IR3 = 10;
 int IR4 = 11; 
 int IR5 = 12; 
 int IR6 = 13; 
-
 const int IRS_SIZE = 6;
 const int IRS[IRS_SIZE] = {
   IR1,
@@ -32,6 +31,16 @@ const int IRS[IRS_SIZE] = {
   IR4,
   IR5,
   IR6,
+};
+
+int motor1 = 5;
+int motor2 = 6;
+int motor3 = 7;
+const int MOTORS_SIZE = 3;
+const int MOTORS[MOTORS_SIZE] = {
+  motor1,
+  motor2,
+  motor3,
 };
 
 
@@ -45,7 +54,9 @@ void setup()
 
 void loop()
 {
-  readIrSignals();
+  // readIrSignals();
+  testMotors();
+
   delay(10);
 }
 
@@ -64,6 +75,12 @@ void initIrs() {
   }
 }
 
+void initMotors() {
+  for (int i = 0; i < MOTORS_SIZE; i++) {
+    pinMode(MOTORS[i], OUTPUT);
+  }
+}
+
 void readIrSignals() {
   Serial.print("IR Signals: ");
     for (int i = 0; i < IRS_SIZE; i++) {
@@ -71,4 +88,13 @@ void readIrSignals() {
       Serial.print(currSignal);
     }
   Serial.println();
+}
+
+void testMotors() {
+  for (int i = 0; i < MOTORS_SIZE; i++) {
+    digitalWrite(MOTORS[i], HIGH);
+    delay(5000);
+    digitalWrite(MOTORS[i], LOW);
+    delay(1000);
+  }
 }
