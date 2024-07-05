@@ -41,9 +41,18 @@ const int MOTORS[TRAINS_SIZE] = {
   motor2,
   motor3,
 };
-
+int currentTrain = motor1;
 
 int areStationsOccupied[STATIONS_SIZE] = {
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+};
+
+int currentIrSignals[STATIONS_SIZE] = {
   false,
   false,
   false,
@@ -69,6 +78,7 @@ void loop()
   // readIrSignals();
   // testMotors();
   findOccupiedStations(); // Prolly sa setup dapat to
+  runTrain();
   delay(10);
 }
 
@@ -94,12 +104,10 @@ void initMotors() {
 }
 
 void readIrSignals() {
-  Serial.print("IR Signals: ");
-    for (int i = 0; i < STATIONS_SIZE; i++) {
-      int currSignal = digitalRead(IRS[i]);
-      Serial.print(currSignal);
-    }
-  Serial.println();
+  for (int i = 0; i < STATIONS_SIZE; i++) {
+    int currSignal = digitalRead(IRS[i]);
+    currentIrSignals[i] = currSignal;
+  }
 }
 
 void testMotors() {
@@ -113,10 +121,9 @@ void testMotors() {
 
 void findOccupiedStations() {
   for (int i = 0; i < STATIONS_SIZE; i++) {
-    int currSignal = digitalRead(IRS[i]);
-    if (currSignal == HIGH) {
-      areStationsOccupied[i] = true;
-    }
+    int currentSignal = digitalRead(IRS[i]);
+    areStationsOccupied[i] = currentSignal;
+    currentIrSignals[i] = currentSignal;
   }
   printArray("STATIONS: ", areStationsOccupied, STATIONS_SIZE);
 }
@@ -127,4 +134,20 @@ void printArray(char* message, int arr[], int size) {
     Serial.print(arr[i]);
   }
   Serial.println();
+}
+
+void runTrain() {
+  digitalWrite(currentTrain, HIGH);
+  while (true) {
+    readIrSignals();
+    printArray("STATIONS: ", areStationsOccupied, STATIONS_SIZE);
+    printArray("IR SIGNALS: ", currentIrSignals, STATIONS_SIZE);
+    // STOP MOTOR WHEN DIFFERENT IR SIGNALS DIFFERENT FROM STATIONS
+
+  }
+  // UPDATE LCD ON THE SIGNAL THAT CHANGES
+
+  // UPDATE CURRENT TRAIN
+
+  // REPEAT
 }
