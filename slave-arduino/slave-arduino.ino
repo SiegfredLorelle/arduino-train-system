@@ -3,21 +3,10 @@
 #include <Servo.h> 
 
 const int STATIONS_SIZE = 6;
+const int TRAINS_SIZE = 3;
 
-Servo servo1;
-Servo servo2;
-Servo servo3;
-Servo servo4;
-Servo servo5;
-Servo servo6;
-Servo SERVOS[STATIONS_SIZE] {
-  servo1,
-  servo2,
-  servo3,
-  servo4,
-  servo5,
-  servo6,
-};
+
+Servo SERVOS[STATIONS_SIZE];
 
 int servosPins[STATIONS_SIZE] = {
   3,
@@ -43,7 +32,24 @@ LiquidCrystal_I2C LCDS[STATIONS_SIZE] = {
   lcdStation6,
 };
 
-int currentServoPos = 45;
+String stationNames[STATIONS_SIZE] = {
+  "Station 1",
+  "Station 2",
+  "Station 3",
+  "Station 4",
+  "Station 5",
+  "Station 6",
+};
+
+String trainNames[TRAINS_SIZE] = {
+  "Train 1",
+  "Train 2",
+  "Train 3",
+};
+
+// int currentServoPos = 45;
+const int servoMinPosition = 45;
+const int servoMaxPosition = 150;
 // bool servoRaised = false;
 // bool servoRaised[STATIONS_SIZE] = {
 //   false, 
@@ -82,22 +88,22 @@ void loop()
   //   String input = Serial.readStringUntil('\n');
   //   input.trim();
 
-  //   if (input = "1") {
+  //   if (input == "1") {
   //     Serial.print(input);
   //   }
-  //   else if (input = "2") {
+  //   else if (input == "2") {
   //     Serial.print(input);
   //   }
-  //   else if (input = "3") {
+  //   else if (input == "3") {
   //     Serial.print(input);
   //   }
-  //   else if (input = "4") {
+  //   else if (input == "4") {
   //     Serial.print(input);
   //   }
-  //   else if (input = "5") {
+  //   else if (input == "5") {
   //     Serial.print(input);
   //   }
-  //   else if (input = "6") {
+  //   else if (input == "6") {
   //     Serial.print(input);
   //   }
   //   else Serial.print("INVALID; ONLY 1 to 6");
@@ -107,7 +113,7 @@ void loop()
 
 void initServos() 
 {
-  for (int i; i < STATIONS_SIZE; i++) 
+  for (int i = 0; i < STATIONS_SIZE; i++) 
   {
     SERVOS[i].attach(servosPins[i]);    
     SERVOS[i].write(45);
@@ -134,8 +140,6 @@ void initServos()
 //   SERVOS[5].attach(servosPins[5]);    
 //   SERVOS[5].write(45);
   
-//   SERVOS[6].attach(servosPins[6]);    
-//   SERVOS[6].write(45);
 // }
 
 void initLcds() 
@@ -165,22 +169,39 @@ void initLcds()
 
 void receiveEvent(int howMany) 
 {
-  if (Wire.available() >= 1) 
+  if (Wire.available() >= 2) 
   {  // Check if at least 1 byte is available
-    char receivedData = Wire.read();
-    bool isValid = isReceivedDataValid(receivedData);
-    // TODO
+    char trainData = Wire.read();
+    char stationData = Wire.read();
+
+    char trainSizeStr = TRAINS_SIZE + '0';
+    char stationSizeStr = STATIONS_SIZE + '0';
+    bool isTrainDataValid = isDataValid(trainData, trainSizeStr);
+    bool isStationDataValid = isDataValid(stationData, stationSizeStr);
+    if (!isTrainDataValid || !isStationDataValid) 
+    {
+      return;
+    }
+
+    int trainNum = trainData - '0';
+    int stationNum = stationData - '0';
+
+    updateLCDToIncoming(stationNum - 1, trainNum - 1);
+    openServo(stationNum - 1);
+    updateLCDToWaiting(stationNum - 1);
+
   }
 }
 
 
-bool isReceivedDataValid(char chars)
+bool isDataValid(char chars, char max)
 {
   Serial.print("RECEIVED ");  // Print the received integer
-  // Serial.print(x);  // Print the received integer
+  Serial.print(chars);  // Print the received integer
+  Serial.println(".");  // Print the received integer
 
-  int x = chars - '0';  // Convert the character to an integer (ASCII to int)
-  if (chars >= '1' && chars <= '6') 
+  // int x = chars - '0';  // Convert the character to an integer (ASCII to int)
+  if (chars >= '1' && chars <= max) 
   {
     // Serial.println(x);  // Print the received integer
     return true;
@@ -189,14 +210,35 @@ bool isReceivedDataValid(char chars)
   else 
   {
     // Serial.print(x);  // Print the received integer
-    Serial.println("Invalid input. Please enter a number between 1-6.");
+    Serial.println("Invalid input. Number must be within 1-3 or 1-6 range.");
     return false;
   }
 }
 
+void clearLCD(int lcdIndex) 
+{
+  LCDS[lcdIndex].clear();
+  LCDS[lcdIndex].setCursor(0, 0);
+}
+
+void updateLCDToIncoming(int lcdIndex, int trainIndex)
+{
+  clearLCD(lcdIndex);
+  String message = trainNames[trainIndex] + " is arriving at " + stationNames[lcdIndex];
+  LCDS[lcdIndex].print(message);
+}
+
+void updateLCDToWaiting(int lcdIndex)
+{
+  clearLCD(lcdIndex);
+  String message = stationNames[lcdIndex] + " Waiting...";
+  LCDS[lcdIndex].print(message);
+}
+
+
 void raiseServo(Servo servo) 
 {
-  for (int pos = currentServoPos; pos <= 150; pos += 1) 
+  for (int pos = servoMinPosition; pos <= servoMaxPosition; pos += 1) 
   {
     servo.write(pos);
     delay(15);
@@ -204,10 +246,9 @@ void raiseServo(Servo servo)
 }
 
 
-
 void lowerServo(Servo servo) 
 {
-  for (int pos = currentServoPos; pos >= 45; pos -= 1) 
+  for (int pos = servoMaxPosition; pos >= servoMinPosition; pos -= 1) 
   {
     servo.write(pos);
     delay(15);
