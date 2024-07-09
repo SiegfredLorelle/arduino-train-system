@@ -1,4 +1,7 @@
 #include <LiquidCrystal_I2C.h> 
+#include <Servo.h> 
+
+Servo myServo;
 
 const int STATIONS_SIZE = 6;
 const int TRAINS_SIZE = 3;
@@ -61,15 +64,20 @@ int currentIrSignals[STATIONS_SIZE] = {
   false,
 };
 
+int currentServoPos = 90; // Initial servo position (adjust as needed)
+bool servoRaised = false; // Flag to track servo state (raised or lowered)
 
 void setup()
 {
   Serial.begin(9600);
   initLcds();
-  initIrs();
+  // initIrs();
   initMotors();
 
-  findOccupiedStations();
+  // findOccupiedStations();
+  myServo.attach(3);    // Attach the servo to pin 9
+  myServo.write(currentServoPos); // Set initial position
+
 }
 
 
@@ -77,9 +85,20 @@ void loop()
 {
   // readIrSignals();
   // testMotors();
-  findOccupiedStations(); // Prolly sa setup dapat to
-  runTrain();
-  delay(10);
+  // findOccupiedStations(); // Prolly sa setup dapat to
+  // delay(00);
+  // runTrain();
+  int currSignal = digitalRead(13);
+  if (currSignal == 0) {
+    Serial.println("RAISING");
+    raiseServo();
+  }
+  else {
+    Serial.println("LOWERING");
+    lowerServo();
+  }
+
+  delay(100);
 }
 
 void initLcds() {
@@ -108,6 +127,8 @@ void readIrSignals() {
     int currSignal = digitalRead(IRS[i]);
     currentIrSignals[i] = currSignal;
   }
+    printArray("IR SIGNALS: ", currentIrSignals, STATIONS_SIZE);
+  
 }
 
 void testMotors() {
@@ -140,8 +161,8 @@ void runTrain() {
   digitalWrite(currentTrain, HIGH);
   while (true) {
     readIrSignals();
-    printArray("STATIONS: ", areStationsOccupied, STATIONS_SIZE);
-    printArray("IR SIGNALS: ", currentIrSignals, STATIONS_SIZE);
+    // printArray("STATIONS: ", areStationsOccupied, STATIONS_SIZE);
+    // printArray("IR SIGNALS: ", currentIrSignals, STATIONS_SIZE);
     // STOP MOTOR WHEN DIFFERENT IR SIGNALS DIFFERENT FROM STATIONS
 
   }
@@ -150,4 +171,36 @@ void runTrain() {
   // UPDATE CURRENT TRAIN
 
   // REPEAT
+}
+
+
+
+void raiseServo() {
+  // Check if servo is already raised and avoid unnecessary movement
+  if (servoRaised) {
+    return;
+  }
+
+  for (int pos = currentServoPos; pos <= 150; pos += 1) {
+    myServo.write(pos);
+    delay(15);
+  }
+  currentServoPos = 150; // Update current position
+  servoRaised = true; // Set raised flag
+}
+
+
+
+void lowerServo() {
+  // Check if servo is already lowered and avoid unnecessary movement
+  if (!servoRaised) {
+    return;
+  }
+
+  for (int pos = currentServoPos; pos >= 45; pos -= 1) {
+    myServo.write(pos);
+    delay(15);
+  }
+  currentServoPos = 45; // Update current position
+  servoRaised = false; // Set lowered flag
 }
