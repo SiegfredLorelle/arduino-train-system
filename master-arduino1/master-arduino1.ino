@@ -7,7 +7,7 @@ void setup()
 
 void loop()
 {
-  const char *message = "Harold idol"; // Define the message to send
+  const char *message = "Kennesu idol"; // Define the message to send
 
   Wire.beginTransmission(4); // transmit to device #4
 

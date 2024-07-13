@@ -2,12 +2,13 @@
 #include <MFRC522.h>
 
 // Define chip select (SS) pins for each reader
-#define SS_PIN_READER1  3
-#define SS_PIN_READER2  4
-#define SS_PIN_READER3  5
-#define SS_PIN_READER4  6
-#define SS_PIN_READER5  7
-#define SS_PIN_READER6  8
+#define SS_PIN_READER1  8
+#define SS_PIN_READER2  7
+#define SS_PIN_READER3  6
+
+#define SS_PIN_READER4  5
+#define SS_PIN_READER5  4
+#define SS_PIN_READER6  3
 #define RST_PIN         9  // Common reset pin for all readers
 
 // Create MFRC522 instances for each reader
