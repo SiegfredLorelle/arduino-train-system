@@ -43,8 +43,17 @@ LiquidCrystal_I2C LCDS[STATIONS_SIZE] = {
   lcdStation6,
 };
 
-int currentServoPos = 45; // Initial servo position (adjust as needed)
-bool servoRaised = false; // Flag to track servo state (raised or lowered)
+int currentServoPos = 45;
+// bool servoRaised = false;
+// bool servoRaised[STATIONS_SIZE] = {
+//   false, 
+//   false, 
+//   false, 
+//   false, 
+//   false, 
+//   false, 
+// };
+
 
 void setup()
 {
@@ -52,25 +61,87 @@ void setup()
   Wire.onReceive(receiveEvent); // register event
   Serial.begin(9600);           // start serial for output
 
-  initServos();
   initLcds();
+  initServos();
+
+
 }
 
 void loop()
 {
   delay(100);
+  // raiseServo(SERVOS[0]);
+  // delay(100);
+  // lowerServo(SERVOS[0]);
+  // raiseServo(SERVOS[1]);
+  // delay(100);
+  // lowerServo(SERVOS[1]);
+  //   Serial.print("INPUT RFID ON STATION (1-6): ");
+  //   while (!Serial.available()) {
+  //   }
+  //   String input = Serial.readStringUntil('\n');
+  //   input.trim();
+
+  //   if (input = "1") {
+  //     Serial.print(input);
+  //   }
+  //   else if (input = "2") {
+  //     Serial.print(input);
+  //   }
+  //   else if (input = "3") {
+  //     Serial.print(input);
+  //   }
+  //   else if (input = "4") {
+  //     Serial.print(input);
+  //   }
+  //   else if (input = "5") {
+  //     Serial.print(input);
+  //   }
+  //   else if (input = "6") {
+  //     Serial.print(input);
+  //   }
+  //   else Serial.print("INVALID; ONLY 1 to 6");
+  //   Serial.println();
   testServos();
 }
 
-void initServos() {
-  for (int i; i < STATIONS_SIZE; i++) {
+void initServos() 
+{
+  for (int i; i < STATIONS_SIZE; i++) 
+  {
     SERVOS[i].attach(servosPins[i]);    
     SERVOS[i].write(45);
   }
 }
 
-void initLcds() {
-  for (int i = 0; i < STATIONS_SIZE; i++) {
+// void initServos() 
+// {
+//   SERVOS[0].attach(servosPins[0]);    
+//   SERVOS[0].write(45);
+
+//   SERVOS[1].attach(servosPins[1]);    
+//   SERVOS[1].write(45);
+
+//   SERVOS[2].attach(servosPins[2]);    
+//   SERVOS[2].write(45);
+
+//   SERVOS[3].attach(servosPins[3]);    
+//   SERVOS[3].write(45);
+  
+//   SERVOS[4].attach(servosPins[4]);    
+//   SERVOS[4].write(45);
+
+//   SERVOS[5].attach(servosPins[5]);    
+//   SERVOS[5].write(45);
+  
+//   SERVOS[6].attach(servosPins[6]);    
+//   SERVOS[6].write(45);
+// }
+
+void initLcds() 
+{
+  for (int i = 0; i < STATIONS_SIZE; i++) 
+  {
     LCDS[i].init();
     LCDS[i].backlight();
     LCDS[i].print("Station ");
@@ -81,56 +152,87 @@ void initLcds() {
 
 // function that executes whenever data is received from master
 // this function is registered as an event, see setup()
-void receiveEvent(int howMany)
+// void receiveEvent(int howMany)
+// {
+//   while(1 < Wire.available()) // loop through all but the last
+//   {
+//     char c = Wire.read(); // receive byte as a character
+//     Serial.print(c);         // print the character
+//   }
+//   int x = Wire.read();    // receive byte as an integer
+//   Serial.println(x);         // print the integer
+// }
+
+void receiveEvent(int howMany) 
 {
-  while(1 < Wire.available()) // loop through all but the last
+  if (Wire.available() >= 1) 
+  {  // Check if at least 1 byte is available
+    char receivedData = Wire.read();
+    bool isValid = isReceivedDataValid(receivedData);
+    // TODO
+  }
+}
+
+
+bool isReceivedDataValid(char chars)
+{
+  Serial.print("RECEIVED ");  // Print the received integer
+  // Serial.print(x);  // Print the received integer
+
+  int x = chars - '0';  // Convert the character to an integer (ASCII to int)
+  if (chars >= '1' && chars <= '6') 
   {
-    char c = Wire.read(); // receive byte as a character
-    Serial.print(c);         // print the character
+    // Serial.println(x);  // Print the received integer
+    return true;
+  } 
+
+  else 
+  {
+    // Serial.print(x);  // Print the received integer
+    Serial.println("Invalid input. Please enter a number between 1-6.");
+    return false;
   }
-  int x = Wire.read();    // receive byte as an integer
-  Serial.println(x);         // print the integer
 }
 
-
-void raiseServo(Servo servo) {
-  // Check if servo is already raised and avoid unnecessary movement
-  if (servoRaised) {
-    return;
-  }
-
-  for (int pos = currentServoPos; pos <= 150; pos += 1) {
+void raiseServo(Servo servo) 
+{
+  for (int pos = currentServoPos; pos <= 150; pos += 1) 
+  {
     servo.write(pos);
     delay(15);
   }
-  currentServoPos = 150; // Update current position
-  servoRaised = true; // Set raised flag
 }
 
 
 
-void lowerServo(Servo servo) {
-  // Check if servo is already lowered and avoid unnecessary movement
-  if (!servoRaised) {
-    return;
-  }
-
-  for (int pos = currentServoPos; pos >= 45; pos -= 1) {
+void lowerServo(Servo servo) 
+{
+  for (int pos = currentServoPos; pos >= 45; pos -= 1) 
+  {
     servo.write(pos);
     delay(15);
   }
-  currentServoPos = 45; // Update current position
-  servoRaised = false; // Set lowered flag
 }
 
-void testServos() {
-  for (int i = 0; i < 6; i++) {
+void testServos() 
+{
+  for (int i = 0; i < STATIONS_SIZE; i++) 
+  {
     Serial.print("RAISING SERVO ");
-    Serial.println(i);
+    Serial.println(i + 1);
     raiseServo(SERVOS[i]);
     delay(100);
     Serial.print("LOWERING SERVO ");
-    Serial.println(i);
+    Serial.println(i + 1);
     lowerServo(SERVOS[i]);
+    delay(100);
   }
+}
+
+void openServo(int servoIndex) 
+{
+  delay(100); // IADJUST TO KUGN ILAN DELAY BAGO BUKSAN IISTART BUKSAN
+  raiseServo(SERVOS[servoIndex]);
+  delay(100); // IADJUST TO KUNG GANO KATAGAL NAKABUKAS
+  lowerServo(SERVOS[servoIndex]);
 }
