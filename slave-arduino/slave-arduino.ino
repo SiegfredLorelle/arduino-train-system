@@ -1,8 +1,8 @@
 #include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <Servo.h> 
 
 const int STATIONS_SIZE = 6;
-
 
 Servo servo1;
 Servo servo2;
@@ -28,6 +28,21 @@ int servosPins[STATIONS_SIZE] = {
   11,
 };
 
+LiquidCrystal_I2C lcdStation1(0x27, 16, 2);
+LiquidCrystal_I2C lcdStation2(0x26, 16, 2);
+LiquidCrystal_I2C lcdStation3(0x25, 16, 2);
+LiquidCrystal_I2C lcdStation4(0x24, 16, 2);
+LiquidCrystal_I2C lcdStation5(0x23, 16, 2);
+LiquidCrystal_I2C lcdStation6(0x22, 16, 2);
+LiquidCrystal_I2C LCDS[STATIONS_SIZE] = {
+  lcdStation1,
+  lcdStation2,
+  lcdStation3,
+  lcdStation4,
+  lcdStation5,
+  lcdStation6,
+};
+
 int currentServoPos = 45; // Initial servo position (adjust as needed)
 bool servoRaised = false; // Flag to track servo state (raised or lowered)
 
@@ -38,6 +53,7 @@ void setup()
   Serial.begin(9600);           // start serial for output
 
   initServos();
+  initLcds();
 }
 
 void loop()
@@ -50,6 +66,15 @@ void initServos() {
   for (int i; i < STATIONS_SIZE; i++) {
     SERVOS[i].attach(servosPins[i]);    
     SERVOS[i].write(45);
+  }
+}
+
+void initLcds() {
+  for (int i = 0; i < STATIONS_SIZE; i++) {
+    LCDS[i].init();
+    LCDS[i].backlight();
+    LCDS[i].print("Station ");
+    LCDS[i].print(i + 1);
   }
 }
 
