@@ -1,16 +1,10 @@
-#include <Wire.h>
+// #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h> 
 
 const int STATIONS_SIZE = 6;
 const int TRAINS_SIZE = 3;
 
-int IR1 = 8; 
-int IR2 = 9; 
-int IR3 = 10; 
-int IR4 = 11; 
-int IR5 = 12; 
-int IR6 = 13; 
 const int IRS[STATIONS_SIZE] = {
   A3,
   A2,
@@ -19,7 +13,6 @@ const int IRS[STATIONS_SIZE] = {
   7 ,
   12,
 };
-
 
 Servo SERVOS[STATIONS_SIZE];
 
@@ -48,12 +41,12 @@ LiquidCrystal_I2C LCDS[STATIONS_SIZE] = {
 };
 
 String stationNames[STATIONS_SIZE] = {
+  "Family Island",
   "HQ 1",
-  "HQ 2",
-  "Goofball Island",
   "Hockey Island",
   "Honesty Island",
-  "Family Island"
+  "HQ 2",
+  "Goofball Island",
 };
 
 String trainNames[TRAINS_SIZE] = {
@@ -64,6 +57,9 @@ String trainNames[TRAINS_SIZE] = {
 
 const int servoMinPosition = 45;
 const int servoMaxPosition = 150;
+int servoDelay = 15;
+int trainStopTime = 3000;
+int trainLeaveDuration = 3000;
 
 bool servoRaised[STATIONS_SIZE] = {
   false, 
@@ -76,7 +72,7 @@ bool servoRaised[STATIONS_SIZE] = {
 
 int runningTrainIndex = 0;
 
-int areStationsOccupied[STATIONS_SIZE] = {
+bool areStationsOccupied[STATIONS_SIZE] = {
   false,
   false,
   false,
@@ -85,7 +81,7 @@ int areStationsOccupied[STATIONS_SIZE] = {
   false,
 };
 
-int currentIrSignals[STATIONS_SIZE] = {
+bool currentIrSignals[STATIONS_SIZE] = {
   false,
   false,
   false,
@@ -93,13 +89,14 @@ int currentIrSignals[STATIONS_SIZE] = {
   false,
   false,
 };
+
 
 
 
 void setup()
 {
-  Wire.begin(4);                // join i2c bus with address #4
-  Wire.onReceive(receiveEvent); // register event
+  // Wire.begin(4);                // join i2c bus with address #4
+  // Wire.onReceive(receiveEvent); // register event
   Serial.begin(9600);           // start serial for output
 
   initIrs();
@@ -108,6 +105,7 @@ void setup()
 
 
   findOccupiedStations();
+  readIrSignals();
 }
 
 void loop()
@@ -131,6 +129,7 @@ void loop()
   //   openServo(0);
   //   updateLCDToWaiting(0);
   // }
+  
   readIrSignals();
   runTrains();
 
@@ -148,7 +147,7 @@ void initServos()
   for (int i = 0; i < STATIONS_SIZE; i++) 
   {
     SERVOS[i].attach(servosPins[i]);    
-    SERVOS[i].write(45);
+    SERVOS[i].write(servoMinPosition);
   }
 }
 
@@ -166,18 +165,18 @@ void initLcds()
 }
 
 
-// function that executes whenever data is received from master
-// this function is registered as an event, see setup()
-void receiveEvent(int howMany)
-{
-  while(1 < Wire.available()) // loop through all but the last
-  {
-    char c = Wire.read(); // receive byte as a character
-    Serial.print(c);         // print the character
-  }
-  int x = Wire.read();    // receive byte as an integer
-  Serial.println(x);         // print the integer
-}
+// // function that executes whenever data is received from master
+// // this function is registered as an event, see setup()
+// void receiveEvent(int howMany)
+// {
+//   while(1 < Wire.available()) // loop through all but the last
+//   {
+//     char c = Wire.read(); // receive byte as a character
+//     Serial.print(c);         // print the character
+//   }
+//   int x = Wire.read();    // receive byte as an integer
+//   Serial.println(x);         // print the integer
+// }
 
 
 void runTrains() 
@@ -186,29 +185,29 @@ void runTrains()
   {
     if (areStationsOccupied[i] != currentIrSignals[i]) 
     {
+      areStationsOccupied[i] = currentIrSignals[i];
+      int nextStationIndex = i + 1;
+
+      if (nextStationIndex >= STATIONS_SIZE)
+      {
+        nextStationIndex = 0;
+      }
+      if (areStationsOccupied[nextStationIndex] != currentIrSignals[nextStationIndex])
+      {
+        areStationsOccupied[nextStationIndex] = currentIrSignals[nextStationIndex];
+        int nextNextStationIndex = nextStationIndex + 1;
+        updateRunningTrain(nextNextStationIndex);
+      }
+      else
+      {
+        updateRunningTrain(nextStationIndex);
+      } 
+      
       trainArriving(runningTrainIndex, i);
-    } 
+      break; 
+    }
   }
 }
-
-// void trainArriving(char trainData, char stationData)
-// {
-//  char trainSizeStr = TRAINS_SIZE + '0';
-//     char stationSizeStr = STATIONS_SIZE + '0';
-//     bool isTrainDataValid = isDataValid(trainData, trainSizeStr);
-//     bool isStationDataValid = isDataValid(stationData, stationSizeStr);
-//     if (!isTrainDataValid || !isStationDataValid) 
-//     {
-//       return;
-//     }
-
-//     int trainNum = trainData - '0';
-//     int stationNum = stationData - '0';
-
-//     updateLCDToIncoming(stationNum - 1, trainNum - 1);
-//     openServo(stationNum - 1);
-//     updateLCDToWaiting(stationNum - 1);
-// }
 
 void trainArriving(int trainIndex, int stationIndex)
 {
@@ -221,7 +220,7 @@ void findOccupiedStations() {
   for (int i = 0; i < STATIONS_SIZE; i++) {
     int currentSignal = digitalRead(IRS[i]);
     areStationsOccupied[i] = currentSignal;
-    currentIrSignals[i] = currentSignal;
+    // currentIrSignals[i] = currentSignal;
   }
   printArray("STATIONS: ", areStationsOccupied, STATIONS_SIZE);
 }
@@ -236,7 +235,7 @@ void readIrSignals() {
     printArray("STATIONS : ", areStationsOccupied, STATIONS_SIZE);
 }
 
-void printArray(char* message, int arr[], int size) {
+void printArray(char* message, bool arr[], int size) {
   Serial.print(message);
   for (int i = 0; i < size; i++) {
     Serial.print(arr[i]);
@@ -244,23 +243,23 @@ void printArray(char* message, int arr[], int size) {
   Serial.println();
 }
 
-bool isDataValid(char chars, char max)
-{
-  Serial.print("RECEIVED ");  
-  Serial.print(chars);
-  Serial.println(".");
+// bool isDataValid(char chars, char max)
+// {
+//   Serial.print("RECEIVED ");  
+//   Serial.print(chars);
+//   Serial.println(".");
 
-  if (chars >= '1' && chars <= max) 
-  {
-    return true;
-  } 
+//   if (chars >= '1' && chars <= max) 
+//   {
+//     return true;
+//   } 
 
-  else 
-  {
-    Serial.println("Invalid input. Number must be within 1-3 or 1-6 range.");
-    return false;
-  }
-}
+//   else 
+//   {
+//     Serial.println("Invalid input. Number must be within 1-3 or 1-6 range.");
+//     return false;
+//   }
+// }
 
 void updateLCDToIncoming(int lcdIndex, int trainIndex)
 {
@@ -268,7 +267,7 @@ void updateLCDToIncoming(int lcdIndex, int trainIndex)
   LCDS[lcdIndex].setCursor(0, 0);
   LCDS[lcdIndex].print(stationNames[lcdIndex]);
 
-  String arrivingMessage = trainNames[trainIndex] + " arriving";
+  String arrivingMessage = trainNames[trainIndex] + " Arriving";
   LCDS[lcdIndex].setCursor(0, 1);
   LCDS[lcdIndex].print(arrivingMessage);
 }
@@ -286,20 +285,20 @@ void updateLCDToWaiting(int lcdIndex)
 
 void raiseServo(Servo servo) 
 {
-  for (int pos = servoMinPosition; pos <= servoMaxPosition; pos += 1) 
+  for (int pos = servoMinPosition; pos <= servoMaxPosition; pos++) 
   {
     servo.write(pos);
-    delay(15);
+    delay(servoDelay);
   }
 }
 
 
 void lowerServo(Servo servo) 
 {
-  for (int pos = servoMaxPosition; pos >= servoMinPosition; pos -= 1) 
+  for (int pos = servoMaxPosition; pos >= servoMinPosition; pos--) 
   {
     servo.write(pos);
-    delay(15);
+    delay(servoDelay);
   }
 }
 
@@ -313,7 +312,7 @@ void testServos()
 
 void openServo(int servoIndex) 
 {
-  delay(100); // IADJUST TO KUGN ILAN DELAY BAGO BUKSAN IISTART BUKSAN
+  delay(trainStopTime);
    if (servoRaised[servoIndex]) {
     return;
   } 
@@ -323,7 +322,7 @@ void openServo(int servoIndex)
   Serial.println(servoIndex + 1);
   raiseServo(SERVOS[servoIndex]);
 
-  delay(100); // IADJUST TO KUNG GANO KATAGAL NAKABUKAS
+  delay(trainLeaveDuration);
   
   Serial.print("LOWERING SERVO ");
   Serial.println(servoIndex + 1);
@@ -359,6 +358,23 @@ char promptForChar() {
   return inputChar;
 }
 
+void updateRunningTrain(int nextStationIndex) 
+  for (int i = 0; i < TRAINS_SIZE; i++) 
+  {
+    if (!areStationsOccupied[nextStationIndex]) 
+    {
+      return;
+    }
 
-// TODO
-// FIND CONSECUTIVE OCCUPIED SPACE TO CHANGE CURRENT RUNNING TRAIN
+    nextStationIndex++;
+    runningTrainIndex++;
+    if (nextStationIndex >= STATIONS_SIZE) 
+    {
+      nextStationIndex = 0;
+    }
+    if (runningTrainIndex >= TRAINS_SIZE) 
+    {
+      runningTrainIndex = 0;
+    }
+  }
+}
