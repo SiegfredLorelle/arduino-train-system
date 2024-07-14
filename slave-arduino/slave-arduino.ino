@@ -33,18 +33,18 @@ LiquidCrystal_I2C LCDS[STATIONS_SIZE] = {
 };
 
 String stationNames[STATIONS_SIZE] = {
-  "Station 1",
-  "Station 2",
-  "Station 3",
-  "Station 4",
-  "Station 5",
-  "Station 6",
+  "HQ 1",
+  "HQ 2",
+  "Goofball Island",
+  "Hockey Island",
+  "Honesty Island",
+  "Family Island"
 };
 
 String trainNames[TRAINS_SIZE] = {
-  "Train 1",
-  "Train 2",
-  "Train 3",
+  "Lorelle",
+  "Caskie",
+  "Sebneth",
 };
 
 // int currentServoPos = 45;
@@ -77,12 +77,14 @@ void loop()
 {
   delay(100);
   // testServos();
+
   char trainData = promptForChar();
   Serial.print("TRAIN ");
   Serial.println(trainData);
   char stationData = promptForChar();
   Serial.print("STATION ");
   Serial.println(stationData);
+  trainArriving(trainData, stationData);
   
 }
 
@@ -123,8 +125,10 @@ void initLcds()
   {
     LCDS[i].init();
     LCDS[i].backlight();
-    LCDS[i].print("Station ");
-    LCDS[i].print(i + 1);
+    LCDS[i].setCursor(0, 0);
+    LCDS[i].print(stationNames[i]);
+    LCDS[i].setCursor(0, 1);
+    LCDS[i].print("Waiting...");
   }
 }
 
@@ -208,24 +212,25 @@ bool isDataValid(char chars, char max)
   }
 }
 
-void clearLCD(int lcdIndex) 
+void updateLCDToIncoming(int lcdIndex, int trainIndex)
 {
   LCDS[lcdIndex].clear();
   LCDS[lcdIndex].setCursor(0, 0);
-}
+  LCDS[lcdIndex].print(stationNames[lcdIndex]);
 
-void updateLCDToIncoming(int lcdIndex, int trainIndex)
-{
-  clearLCD(lcdIndex);
-  String message = trainNames[trainIndex] + " is arriving at " + stationNames[lcdIndex];
-  LCDS[lcdIndex].print(message);
+  String arrivingMessage = trainNames[trainIndex] + " arriving";
+  LCDS[lcdIndex].setCursor(0, 1);
+  LCDS[lcdIndex].print(arrivingMessage);
 }
 
 void updateLCDToWaiting(int lcdIndex)
 {
-  clearLCD(lcdIndex);
-  String message = stationNames[lcdIndex] + " Waiting...";
-  LCDS[lcdIndex].print(message);
+  LCDS[lcdIndex].clear();
+  LCDS[lcdIndex].setCursor(0, 0);
+  LCDS[lcdIndex].print(stationNames[lcdIndex]);
+
+  LCDS[lcdIndex].setCursor(0, 1);
+  LCDS[lcdIndex].print("Waiting...");
 }
 
 
