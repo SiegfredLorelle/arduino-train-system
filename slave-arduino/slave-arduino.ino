@@ -76,39 +76,14 @@ void setup()
 void loop()
 {
   delay(100);
-  // raiseServo(SERVOS[0]);
-  // delay(100);
-  // lowerServo(SERVOS[0]);
-  // raiseServo(SERVOS[1]);
-  // delay(100);
-  // lowerServo(SERVOS[1]);
-  //   Serial.print("INPUT RFID ON STATION (1-6): ");
-  //   while (!Serial.available()) {
-  //   }
-  //   String input = Serial.readStringUntil('\n');
-  //   input.trim();
-
-  //   if (input == "1") {
-  //     Serial.print(input);
-  //   }
-  //   else if (input == "2") {
-  //     Serial.print(input);
-  //   }
-  //   else if (input == "3") {
-  //     Serial.print(input);
-  //   }
-  //   else if (input == "4") {
-  //     Serial.print(input);
-  //   }
-  //   else if (input == "5") {
-  //     Serial.print(input);
-  //   }
-  //   else if (input == "6") {
-  //     Serial.print(input);
-  //   }
-  //   else Serial.print("INVALID; ONLY 1 to 6");
-  //   Serial.println();
-  testServos();
+  // testServos();
+  char trainData = promptForChar();
+  Serial.print("TRAIN ");
+  Serial.println(trainData);
+  char stationData = promptForChar();
+  Serial.print("STATION ");
+  Serial.println(stationData);
+  
 }
 
 void initServos() 
@@ -193,6 +168,24 @@ void receiveEvent(int howMany)
   }
 }
 
+void trainArriving(char trainData, char stationData)
+{
+ char trainSizeStr = TRAINS_SIZE + '0';
+    char stationSizeStr = STATIONS_SIZE + '0';
+    bool isTrainDataValid = isDataValid(trainData, trainSizeStr);
+    bool isStationDataValid = isDataValid(stationData, stationSizeStr);
+    if (!isTrainDataValid || !isStationDataValid) 
+    {
+      return;
+    }
+
+    int trainNum = trainData - '0';
+    int stationNum = stationData - '0';
+
+    updateLCDToIncoming(stationNum - 1, trainNum - 1);
+    openServo(stationNum - 1);
+    updateLCDToWaiting(stationNum - 1);
+}
 
 bool isDataValid(char chars, char max)
 {
@@ -259,21 +252,48 @@ void testServos()
 {
   for (int i = 0; i < STATIONS_SIZE; i++) 
   {
-    Serial.print("RAISING SERVO ");
-    Serial.println(i + 1);
-    raiseServo(SERVOS[i]);
-    delay(100);
-    Serial.print("LOWERING SERVO ");
-    Serial.println(i + 1);
-    lowerServo(SERVOS[i]);
-    delay(100);
+    openServo(i);
   }
-}
+}  
 
 void openServo(int servoIndex) 
 {
   delay(100); // IADJUST TO KUGN ILAN DELAY BAGO BUKSAN IISTART BUKSAN
+  
+  Serial.print("RAISING SERVO ");
+  Serial.println(servoIndex + 1);
   raiseServo(SERVOS[servoIndex]);
+
   delay(100); // IADJUST TO KUNG GANO KATAGAL NAKABUKAS
+  
+  Serial.print("LOWERING SERVO ");
+  Serial.println(servoIndex + 1);
   lowerServo(SERVOS[servoIndex]);
+}
+
+char promptForChar() {
+  char inputChar = '\0';
+  bool numberEntered = false;
+  
+  // Prompt the user to enter a number
+  Serial.println("Please enter a number:");
+  
+  while (!numberEntered) {
+    // Check if data is available to read
+    if (Serial.available() > 0) {
+      // Read the incoming data as a string
+      String input = Serial.readStringUntil('\n');
+
+      if (input.length() > 0) 
+      {
+        inputChar = input.charAt(0);
+        numberEntered = true;
+      } 
+      else 
+      {
+        Serial.println("Invalid input. Please enter a valid number:");
+      }
+    }
+  }
+  return inputChar;
 }
