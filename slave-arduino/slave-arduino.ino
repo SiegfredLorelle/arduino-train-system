@@ -16,7 +16,7 @@ const int IRS[STATIONS_SIZE] = {
   A2,
   A1,
   A0,
-  13,
+  7 ,
   12,
 };
 
