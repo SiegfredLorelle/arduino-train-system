@@ -47,18 +47,9 @@ String trainNames[TRAINS_SIZE] = {
   "Sebneth",
 };
 
-// int currentServoPos = 45;
 const int servoMinPosition = 45;
 const int servoMaxPosition = 150;
-// bool servoRaised = false;
-// bool servoRaised[STATIONS_SIZE] = {
-//   false, 
-//   false, 
-//   false, 
-//   false, 
-//   false, 
-//   false, 
-// };
+
 
 
 void setup()
@@ -97,28 +88,6 @@ void initServos()
   }
 }
 
-// void initServos() 
-// {
-//   SERVOS[0].attach(servosPins[0]);    
-//   SERVOS[0].write(45);
-
-//   SERVOS[1].attach(servosPins[1]);    
-//   SERVOS[1].write(45);
-
-//   SERVOS[2].attach(servosPins[2]);    
-//   SERVOS[2].write(45);
-
-//   SERVOS[3].attach(servosPins[3]);    
-//   SERVOS[3].write(45);
-  
-//   SERVOS[4].attach(servosPins[4]);    
-//   SERVOS[4].write(45);
-
-//   SERVOS[5].attach(servosPins[5]);    
-//   SERVOS[5].write(45);
-  
-// }
-
 void initLcds() 
 {
   for (int i = 0; i < STATIONS_SIZE; i++) 
@@ -135,42 +104,17 @@ void initLcds()
 
 // function that executes whenever data is received from master
 // this function is registered as an event, see setup()
-// void receiveEvent(int howMany)
-// {
-//   while(1 < Wire.available()) // loop through all but the last
-//   {
-//     char c = Wire.read(); // receive byte as a character
-//     Serial.print(c);         // print the character
-//   }
-//   int x = Wire.read();    // receive byte as an integer
-//   Serial.println(x);         // print the integer
-// }
-
-void receiveEvent(int howMany) 
+void receiveEvent(int howMany)
 {
-  if (Wire.available() >= 2) 
-  {  // Check if at least 1 byte is available
-    char trainData = Wire.read();
-    char stationData = Wire.read();
-
-    char trainSizeStr = TRAINS_SIZE + '0';
-    char stationSizeStr = STATIONS_SIZE + '0';
-    bool isTrainDataValid = isDataValid(trainData, trainSizeStr);
-    bool isStationDataValid = isDataValid(stationData, stationSizeStr);
-    if (!isTrainDataValid || !isStationDataValid) 
-    {
-      return;
-    }
-
-    int trainNum = trainData - '0';
-    int stationNum = stationData - '0';
-
-    updateLCDToIncoming(stationNum - 1, trainNum - 1);
-    openServo(stationNum - 1);
-    updateLCDToWaiting(stationNum - 1);
-
+  while(1 < Wire.available()) // loop through all but the last
+  {
+    char c = Wire.read(); // receive byte as a character
+    Serial.print(c);         // print the character
   }
+  int x = Wire.read();    // receive byte as an integer
+  Serial.println(x);         // print the integer
 }
+
 
 void trainArriving(char trainData, char stationData)
 {
@@ -193,20 +137,17 @@ void trainArriving(char trainData, char stationData)
 
 bool isDataValid(char chars, char max)
 {
-  Serial.print("RECEIVED ");  // Print the received integer
-  Serial.print(chars);  // Print the received integer
-  Serial.println(".");  // Print the received integer
+  Serial.print("RECEIVED ");  
+  Serial.print(chars);
+  Serial.println(".");
 
-  // int x = chars - '0';  // Convert the character to an integer (ASCII to int)
   if (chars >= '1' && chars <= max) 
   {
-    // Serial.println(x);  // Print the received integer
     return true;
   } 
 
   else 
   {
-    // Serial.print(x);  // Print the received integer
     Serial.println("Invalid input. Number must be within 1-3 or 1-6 range.");
     return false;
   }
