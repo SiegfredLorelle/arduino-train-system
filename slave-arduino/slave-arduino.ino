@@ -5,6 +5,21 @@
 const int STATIONS_SIZE = 6;
 const int TRAINS_SIZE = 3;
 
+int IR1 = 8; 
+int IR2 = 9; 
+int IR3 = 10; 
+int IR4 = 11; 
+int IR5 = 12; 
+int IR6 = 13; 
+const int IRS[STATIONS_SIZE] = {
+  A3,
+  A2,
+  A1,
+  A0,
+  13,
+  12,
+};
+
 
 Servo SERVOS[STATIONS_SIZE];
 
@@ -50,6 +65,35 @@ String trainNames[TRAINS_SIZE] = {
 const int servoMinPosition = 45;
 const int servoMaxPosition = 150;
 
+bool servoRaised[STATIONS_SIZE] = {
+  false, 
+  false, 
+  false, 
+  false, 
+  false, 
+  false, 
+};
+
+int runningTrainIndex = 0;
+
+int areStationsOccupied[STATIONS_SIZE] = {
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+};
+
+int currentIrSignals[STATIONS_SIZE] = {
+  false,
+  false,
+  false,
+  false,
+  false,
+  false,
+};
+
 
 
 void setup()
@@ -58,10 +102,12 @@ void setup()
   Wire.onReceive(receiveEvent); // register event
   Serial.begin(9600);           // start serial for output
 
+  initIrs();
   initLcds();
   initServos();
 
 
+  findOccupiedStations();
 }
 
 void loop()
@@ -69,14 +115,32 @@ void loop()
   delay(100);
   // testServos();
 
-  char trainData = promptForChar();
-  Serial.print("TRAIN ");
-  Serial.println(trainData);
-  char stationData = promptForChar();
-  Serial.print("STATION ");
-  Serial.println(stationData);
-  trainArriving(trainData, stationData);
+  // char trainData = promptForChar();
+  // Serial.print("TRAIN ");
+  // Serial.println(trainData);
+  // char stationData = promptForChar();
+  // Serial.print("STATION ");
+  // Serial.println(stationData);
+  // trainArriving(trainData, stationData);
+
+
+  // int currSignal = digitalRead(A3);
+  // if (currSignal == 0) 
+  // {
+  //   updateLCDToIncoming(0, runningTrainIndex);
+  //   openServo(0);
+  //   updateLCDToWaiting(0);
+  // }
+  readIrSignals();
+  runTrains();
+
   
+}
+
+void initIrs() {
+  for (int i = 0; i < STATIONS_SIZE; i++) {
+    pinMode(IRS[i], INPUT);
+  }
 }
 
 void initServos() 
@@ -116,23 +180,68 @@ void receiveEvent(int howMany)
 }
 
 
-void trainArriving(char trainData, char stationData)
+void runTrains() 
 {
- char trainSizeStr = TRAINS_SIZE + '0';
-    char stationSizeStr = STATIONS_SIZE + '0';
-    bool isTrainDataValid = isDataValid(trainData, trainSizeStr);
-    bool isStationDataValid = isDataValid(stationData, stationSizeStr);
-    if (!isTrainDataValid || !isStationDataValid) 
+  for (int i = 0; i < STATIONS_SIZE; i++) 
+  {
+    if (areStationsOccupied[i] != currentIrSignals[i]) 
     {
-      return;
-    }
+      trainArriving(runningTrainIndex, i);
+    } 
+  }
+}
 
-    int trainNum = trainData - '0';
-    int stationNum = stationData - '0';
+// void trainArriving(char trainData, char stationData)
+// {
+//  char trainSizeStr = TRAINS_SIZE + '0';
+//     char stationSizeStr = STATIONS_SIZE + '0';
+//     bool isTrainDataValid = isDataValid(trainData, trainSizeStr);
+//     bool isStationDataValid = isDataValid(stationData, stationSizeStr);
+//     if (!isTrainDataValid || !isStationDataValid) 
+//     {
+//       return;
+//     }
 
-    updateLCDToIncoming(stationNum - 1, trainNum - 1);
-    openServo(stationNum - 1);
-    updateLCDToWaiting(stationNum - 1);
+//     int trainNum = trainData - '0';
+//     int stationNum = stationData - '0';
+
+//     updateLCDToIncoming(stationNum - 1, trainNum - 1);
+//     openServo(stationNum - 1);
+//     updateLCDToWaiting(stationNum - 1);
+// }
+
+void trainArriving(int trainIndex, int stationIndex)
+{
+    updateLCDToIncoming(stationIndex, trainIndex);
+    openServo(stationIndex);
+    updateLCDToWaiting(stationIndex);
+}
+
+void findOccupiedStations() {
+  for (int i = 0; i < STATIONS_SIZE; i++) {
+    int currentSignal = digitalRead(IRS[i]);
+    areStationsOccupied[i] = currentSignal;
+    currentIrSignals[i] = currentSignal;
+  }
+  printArray("STATIONS: ", areStationsOccupied, STATIONS_SIZE);
+}
+
+
+void readIrSignals() {
+  for (int i = 0; i < STATIONS_SIZE; i++) {
+    int currSignal = digitalRead(IRS[i]);
+    currentIrSignals[i] = currSignal;
+  }
+    printArray("IR SIGNALS: ", currentIrSignals, STATIONS_SIZE);
+    printArray("STATIONS : ", areStationsOccupied, STATIONS_SIZE);
+}
+
+void printArray(char* message, int arr[], int size) {
+  Serial.print(message);
+  for (int i = 0; i < size; i++) {
+    Serial.print(arr[i]);
+  }
+  Serial.println();
 }
 
 bool isDataValid(char chars, char max)
@@ -205,7 +314,11 @@ void testServos()
 void openServo(int servoIndex) 
 {
   delay(100); // IADJUST TO KUGN ILAN DELAY BAGO BUKSAN IISTART BUKSAN
-  
+   if (servoRaised[servoIndex]) {
+    return;
+  } 
+  servoRaised[servoIndex] = true; // Set lowered flag
+
   Serial.print("RAISING SERVO ");
   Serial.println(servoIndex + 1);
   raiseServo(SERVOS[servoIndex]);
@@ -215,6 +328,8 @@ void openServo(int servoIndex)
   Serial.print("LOWERING SERVO ");
   Serial.println(servoIndex + 1);
   lowerServo(SERVOS[servoIndex]);
+
+  servoRaised[servoIndex] = false; // Set lowered flag
 }
 
 char promptForChar() {
@@ -243,3 +358,7 @@ char promptForChar() {
   }
   return inputChar;
 }
+
+
+// TODO
+// FIND CONSECUTIVE OCCUPIED SPACE TO CHANGE CURRENT RUNNING TRAIN
