@@ -1,6 +1,9 @@
   // #include <Wire.h>
   #include <LiquidCrystal_I2C.h>
   #include <Servo.h> 
+  // #include <Wire.h>
+  #include <LiquidCrystal_I2C.h>
+  #include <Servo.h> 
 
   const int STATIONS_SIZE = 6;
   const int TRAINS_SIZE = 3;
@@ -99,6 +102,11 @@
     // Wire.begin(4);                // join i2c bus with address #4
     // Wire.onReceive(receiveEvent); // register event
     Serial.begin(9600);           // start serial for output
+  void setup()
+  {
+    // Wire.begin(4);                // join i2c bus with address #4
+    // Wire.onReceive(receiveEvent); // register event
+    Serial.begin(9600);           // start serial for output
 
     initIrs();
     initLcds();
@@ -161,6 +169,18 @@
     }
   }
 
+  void initLcds() 
+  {
+    for (int i = 0; i < STATIONS_SIZE; i++) 
+    {
+      LCDS[i].init();
+      LCDS[i].backlight();
+      LCDS[i].setCursor(0, 0);
+      LCDS[i].print(stationNames[i]);
+      LCDS[i].setCursor(0, 1);
+      LCDS[i].print("Waiting...");
+    }
+  }
   void initLcds() 
   {
     for (int i = 0; i < STATIONS_SIZE; i++) 
