@@ -9,9 +9,9 @@
     A3,
     A2,
     A1,
-    A0,
-    7 ,
+    7,
     8,
+    A0,
   };
 
   Servo SERVOS[STATIONS_SIZE];
@@ -20,9 +20,9 @@
     3,
     5,
     6,
-    9,
     10,
     11,
+    9,
   };
 
   LiquidCrystal_I2C lcdStation1(0x27, 16, 2);
@@ -35,18 +35,19 @@
     lcdStation1,
     lcdStation2,
     lcdStation3,
-    lcdStation4,
     lcdStation5,
     lcdStation6,
+    lcdStation4,
   };
 
+
   String stationNames[STATIONS_SIZE] = {
-    "Goofball Island",
     "Family Island",
     "Hockey Island",
     "HQ 2",
     "Honesty Island",
     "HQ 1",
+    "Goofball Island", 
   };
 
   String trainNames[TRAINS_SIZE] = {
@@ -55,11 +56,11 @@
     "Sebneth",
   };
 
-  const int servoMinPosition = 150;
-  const int servoMaxPosition = 45;
+  const int servoMinPosition = 45;
+  const int servoMaxPosition = 150;
   int servoDelay = 10;
-  int trainStopTime = 2000;
-  int trainLeaveDuration = 1000;  
+  int trainStopTime = 2500;
+  int trainLeaveDuration = 1500;  
 
   bool servoRaised[STATIONS_SIZE] = {
     false, 
@@ -70,7 +71,7 @@
     false, 
   };
 
-  int runningTrainIndex = 2;
+  int runningTrainIndex = 1;
 
   bool areStationsOccupied[STATIONS_SIZE] = {
     false,
@@ -106,6 +107,10 @@
 
     findOccupiedStations();
     readIrSignals();
+    // test();
+    // findFirstTrainToRun();
+    // runFirstTrain();
+    // trainArriving(runningTrainIndex, i);
   }
 
   void loop()
@@ -132,7 +137,9 @@
     
     
     readIrSignals();
-    runTrains();
+    
+    // runTrains();
+    test();
     // String str = promptForBinaryString();
 
     
@@ -182,38 +189,63 @@
   // }
 
 
-  void runTrains() 
+void findFirstTrainToRun() {
+  runningTrainIndex = 0;
+  int i = 0;
+  while (i < STATIONS_SIZE) 
   {
-    for (int i = 0; i < STATIONS_SIZE; i++) 
+    int nextStationIndex = i + 1;
+    if (nextStationIndex >= STATIONS_SIZE)
     {
-      if (areStationsOccupied[i] != currentIrSignals[i]) 
-      {
-        // areStationsOccupied[i] = currentIrSignals[i];
-        // int nextStationIndex = i + 1;
+      nextStationIndex = 0;
+    }
 
-        // if (nextStationIndex >= STATIONS_SIZE)
-        // {
-        //   nextStationIndex = 0;
-        // }
-        // if (areStationsOccupied[nextStationIndex] != currentIrSignals[nextStationIndex])
-        // {
-        //   areStationsOccupied[nextStationIndex] = currentIrSignals[nextStationIndex];
-        //   int nextNextStationIndex = nextStationIndex + 1;
-        //   updateRunningTrain(nextNextStationIndex);
-        // }
-        // else
-        // {
-        //   updateRunningTrain(nextStationIndex);
-        // } 
-        
-        trainArriving(runningTrainIndex, i);
+    if (!areStationsOccupied[i] && areStationsOccupied[nextStationIndex]) 
+    {
+      trainArriving(runningTrainIndex, i);
+      return;
+    }
+    if (!areStationsOccupied[i]) 
+    {
+      runningTrainIndex++;
+    }
+    i++;
+  }
+}
 
 
+void runTrains() 
+{
+  for (int i = 0; i < STATIONS_SIZE; i++) 
+  {
+    
+  if (areStationsOccupied[i] != currentIrSignals[i]) 
+    {
+      // areStationsOccupied[i] = currentIrSignals[i];
+      // int nextStationIndex = i + 1;
 
-        // break; 
-      }
+      // if (nextStationIndex >= STATIONS_SIZE)
+      // {
+      //   nextStationIndex = 0;
+      // }
+      // if (areStationsOccupied[nextStationIndex] != currentIrSignals[nextStationIndex])
+      // {
+      //   areStationsOccupied[nextStationIndex] = currentIrSignals[nextStationIndex];
+      //   int nextNextStationIndex = nextStationIndex + 1;
+      //   updateRunningTrain(nextNextStationIndex);
+      // }
+      // else
+      // {
+      //   updateRunningTrain(nextStationIndex);
+      // } 
+      
+      trainArriving(runningTrainIndex, i);
+        // break;
+
+      // }
     }
   }
+}
 
   void trainArriving(int trainIndex, int stationIndex)
   {
@@ -222,8 +254,10 @@
       updateLCDToWaiting(stationIndex);
   }
 
-  void findOccupiedStations() {
-    for (int i = 0; i < STATIONS_SIZE; i++) {
+  void findOccupiedStations() 
+  {
+    for (int i = 0; i < STATIONS_SIZE; i++)
+    {
       int currentSignal = digitalRead(IRS[i]);
       areStationsOccupied[i] = currentSignal;
       // currentIrSignals[i] = currentSignal;
@@ -273,7 +307,7 @@
     LCDS[lcdIndex].setCursor(0, 0);
     LCDS[lcdIndex].print(stationNames[lcdIndex]);
 
-    String arrivingMessage = trainNames[trainIndex] + " Arriving";
+    String arrivingMessage = trainNames[trainIndex] + " Arrived";
     LCDS[lcdIndex].setCursor(0, 1);
     LCDS[lcdIndex].print(arrivingMessage);
   }
@@ -341,52 +375,51 @@
     servoRaised[servoIndex] = false; // Set lowered flag
   }
 
-  char promptForChar() {
-    char inputChar = '\0';
-    bool numberEntered = false;
-    
-    // Prompt the user to enter a number
-    Serial.println("Please enter a number:");
-    
-    while (!numberEntered) {
-      // Check if data is available to read
-      if (Serial.available() > 0) {
-        // Read the incoming data as a string
-        String input = Serial.readStringUntil('\n');
 
-        if (input.length() > 0) 
-        {
-          inputChar = input.charAt(0);
-          numberEntered = true;
-        } 
-        else 
-        {
-          Serial.println("Invalid input. Please enter a valid number:");
-        }
-      }
-    }
-    return inputChar;
-  }
 
-  void updateRunningTrain(int nextStationIndex) 
-  {
-    for (int i = 0; i < TRAINS_SIZE; i++) 
-    
+void updateCurrentRunningTrain () {
+  runningTrainIndex++;
+  if  (runningTrainIndex >= TRAINS_SIZE) runningTrainIndex = 0;
+}
+
+void test() {
+
+
+  for (int i = 0; i < STATIONS_SIZE; i += 2) {
+    while (true) 
     {
-      if (!areStationsOccupied[nextStationIndex]) 
+      if (!digitalRead(IRS[i])) 
       {
-        return;
-      }
-
-      nextStationIndex++;
-      runningTrainIndex++;
-      if (nextStationIndex >= STATIONS_SIZE) 
-      {
-        nextStationIndex = 0;
-      }
-      if (runningTrainIndex >= TRAINS_SIZE) 
-      {
-        runningTrainIndex = 0;
+        // trainArriving(i/2, i);
+        int nextIndex = i;
+        if (i + 1 >= STATIONS_SIZE)  nextIndex = 0;
+        else nextIndex++; 
+        updateCurrentRunningTrain();
+        updateLCDToIncoming(nextIndex, runningTrainIndex);
+        openServo(i);
+        updateLCDToWaiting(i);
+        break;
       }
     }
   }
+
+  for (int i = 1; i < STATIONS_SIZE; i += 2) {
+    while (true) 
+    {
+      if (!digitalRead(IRS[i]))
+      {
+        // trainArriving(i/2 - 1,  i);
+        int nextIndex = i;
+        if (i + 1 >= STATIONS_SIZE)  nextIndex = 0;
+        else nextIndex++; 
+        updateCurrentRunningTrain();
+        updateLCDToIncoming(nextIndex, runningTrainIndex);
+        openServo(i);
+        updateLCDToWaiting(i);
+        break;
+      }
+    }
+  }
+}
+
+
